@@ -39,8 +39,8 @@ export async function run() {
     let lines: string[] = [];
 
     lines.push(`## Release Readiness
-    Repo | Triage | ${versions.join(" | ")}
-    -----|-----|-----|-----|-------`);
+Repo | Triage | ${versions.join(" | ")}
+-----|-----|-----|-----|-------`);
 
     repositories.forEach(repo => {
         let line = `${repo}`;
