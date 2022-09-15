@@ -1,5 +1,7 @@
 # opensearch-build-badger
-Create badges for OpenSearch components
+Create badges for OpenSearch components, generates a markdown friendly UX over repositories using img.shields.io to create the tiles.
+
+Special thanks to @amitkumardube, his blog walked through the process over on [medium](https://medium.com/worldwide-writing-network/github-actions-write-your-first-action-using-typescript-c5e2783faaae).
 
 How does its output look? It looks like this:
 
