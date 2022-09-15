@@ -21,7 +21,7 @@ const core = __nccwpck_require__(186);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const versionParam = core.getInput("versions", { required: true });
-        const versions = versionParam.split(",");
+        const versions = versionParam.split(",").map(str => str.trim());
         const repositories = [
             "OpenSearch",
             "OpenSearch-Dashboards",

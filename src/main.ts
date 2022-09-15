@@ -2,7 +2,7 @@ const core = require("@actions/core");
 
 export async function run() {
     const versionParam: string = core.getInput("versions", {required: true});
-    const versions = versionParam.split(",");
+    const versions = versionParam.split(",").map(str => str.trim());
 
     const repositories = [
         "OpenSearch",
