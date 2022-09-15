@@ -51,7 +51,11 @@ export async function run() {
         lines.push(line);
     });
 
-    return lines.join("\r\n");
+    const result = lines.join("\r\n");
+
+    console.log(result);
+
+    return result;
   }
   
   run()
