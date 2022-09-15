@@ -1,0 +1,27 @@
+{
+  "name": "opensearch-badger",
+  "version": "1.0.0",
+  "description": "Creates badges for OpenSearch components",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && ncc build lib/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peternied/opensearch-build-badger.git"
+  },
+  "author": "Peter Nied",
+  "bugs": {
+    "url": "https://github.com/peternied/opensearch-build-badger/issues"
+  },
+  "homepage": "https://github.com/peternied/opensearch-build-badger#readme",
+  "dependencies": {
+    "@actions/core": "^1.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^16.4.11",
+    "@vercel/ncc": "^0.29.0",
+    "jest": "^27.0.6",
+    "typescript": "^4.3.5"
+  }
+}
