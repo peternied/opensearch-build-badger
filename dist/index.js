@@ -16,86 +16,49 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.run = void 0;
+exports.singleRepo = exports.multiRepo = exports.run = void 0;
 const core = __nccwpck_require__(186);
-const repoRoot = 'https://github.com/opensearch-project/';
-const makeShieldPrefix = (type) => `https://img.shields.io/github/${type}/opensearch-project`;
-const untriagedPrefix = `![](${makeShieldPrefix("issues")}`;
-const makeUntriagedBadge = (repo) => `[${untriagedPrefix}/${repo}/untriaged)](${repoRoot}${repo}/issues?q=is%3Aissue+is%3Aopen+label%3Auntriaged)`;
-const openIssuePrefix = `![](${makeShieldPrefix("issues")}`;
-const closedIssuePrefix = `![](${makeShieldPrefix("issues-closed")}`;
-const makeOpenIssueBadge = (repo, twoDigitVer) => `[${openIssuePrefix}/${repo}/v${twoDigitVer}.0)](${repoRoot}${repo}/issues?q=is%3Aissue+is%3Aopen+label%3Av${twoDigitVer}.0)`;
-const makeClosedIssueBadge = (repo, twoDigitVer) => `[${closedIssuePrefix}/${repo}/v${twoDigitVer}.0)](${repoRoot}${repo}/issues?q=is%3Aissue+is%3Aclosed+label%3Av${twoDigitVer}.0)`;
-const makeInactiveIssuesOverXDays = (repo, days) => `INACTIVE_ISSUES`;
-const makeInactivePullRequestsOverXDays = (repo, days) => `INACTIVE_PRS`;
-const makeSecurityIssues = (repo) => `SECURITY_ISSUES`;
-const makeCodeCoverage = (repo) => `![https://img.shields.io/codecov/c/gh/opensearch-project/${repo}](https://app.codecov.io/gh/opensearch-project/${repo})`;
-const makeNextReleaseIssueCount = (repo, twoDigitVer) => `NEXT_RELEASE_ISSUES`;
+const makeShield = (type, repo) => `https://img.shields.io/github/${type}/opensearch-project/${repo}`;
+const makeLabeledShield = (type, repo, label) => `${makeShield(type, repo)}/${label}`;
+const makeLabeledLink = (issueState, repo, label) => `https://github.com/opensearch-project/${repo}/issues?q=is%3Aissue+is%3A${issueState}+label%3A"${label}"`;
+const imageWithLink = (img, link, labelColor) => `[![](${img}${!!labelColor ? "?labelColor=" + labelColor : ''})](${link})`;
+const makeOpenIssues = (repo) => imageWithLink(makeShield("issues", repo), `https://github.com/opensearch-project/${repo}/issues`);
+const makeOpenPullRequests = (repo) => imageWithLink(makeShield("issues-pr", repo), `https://github.com/opensearch-project/${repo}/pulls`);
+const makeUntriagedBadge = (repo) => imageWithLink(makeLabeledShield("issues", repo, "untriaged"), makeLabeledLink("open", repo, "untriaged"), "red");
+const makeSecurityIssues = (repo) => imageWithLink(makeLabeledShield("issues", repo, "security%20vulnerability"), makeLabeledLink("open", repo, "security%20vulnerability"), "red");
+const makeCodeCoverage = (repo) => imageWithLink(`https://img.shields.io/codecov/c/gh/opensearch-project/${repo}`, `https://app.codecov.io/gh/opensearch-project/${repo}`);
+const makeNextReleaseIssueCount = (repo, version) => {
+    return imageWithLink(makeLabeledShield("issues", repo, normalizeVersion(version)), makeLabeledLink("open", repo, normalizeVersion(version)));
+};
+const makeNextReleaseClosedIssueCount = (repo, version) => {
+    return imageWithLink(makeLabeledShield("issues-closed", repo, normalizeVersion(version)), makeLabeledLink("closed", repo, normalizeVersion(version)));
+};
+const normalizeVersion = (version) => {
+    const versionParts = version.split("\.");
+    let numericString;
+    if (versionParts.length == 3) {
+        numericString = version;
+    }
+    else if (versionParts.length == 2) {
+        numericString = `${version}.0`;
+    }
+    else {
+        throw new Error("Unable to understand version string, " + version);
+    }
+    return `v${numericString}`;
+};
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const versionParam = core.getInput("versions", { required: true });
-        const singleRepository = "security"; //core.getInput("repository", {required: false});
+        const singleRepository = core.getInput("repository", { required: false });
         const versions = versionParam.split(",").map(str => str.trim());
+        let result;
         if (!!singleRepository) {
-            let tableKeys = [];
-            let tableValues = [];
-            tableKeys.push("Untriaged");
-            tableValues.push(makeUntriagedBadge(singleRepository));
-            const inactiveDays = 14;
-            tableKeys.push(`Inactive Issues (${inactiveDays} days)`);
-            tableValues.push(makeInactiveIssuesOverXDays(singleRepository, inactiveDays));
-            tableKeys.push(`Inactive Pull Requests (${inactiveDays} days)`);
-            tableValues.push(makeInactivePullRequestsOverXDays(singleRepository, inactiveDays));
-            tableKeys.push("Security Issues");
-            tableValues.push(makeSecurityIssues(singleRepository));
-            tableKeys.push("Code Coverage");
-            tableValues.push(makeCodeCoverage(singleRepository));
-            const nextMajor = "3.0";
-            tableKeys.push(`Upcoming ${nextMajor} Release Issues`);
-            tableValues.push(makeSecurityIssues(makeNextReleaseIssueCount(singleRepository, nextMajor)));
-            const nextMinor = "2.4";
-            tableKeys.push(`Upcoming ${nextMinor} Release Issues`);
-            tableValues.push(makeSecurityIssues(makeNextReleaseIssueCount(singleRepository, nextMinor)));
-            const tableHeaderRow = tableKeys.join("|");
-            const tableDividerRow = tableKeys.map(s => "---").join("|");
-            const tableValuesRow = tableValues.join("|");
-            console.log(tableHeaderRow + "\r\n" + tableDividerRow + "\r\n" + tableValuesRow);
-            return;
+            result = singleRepo(singleRepository, versions);
         }
-        const repositories = [
-            "OpenSearch",
-            // "OpenSearch-Dashboards",
-            // "alerting",
-            // "anomaly-detection",
-            // "asynchronous-search",
-            // "common-utils",
-            // "cross-cluster-replication",
-            // "dashboards-reports",
-            // "geospatial",
-            // "index-management",
-            // "job-scheduler",
-            // "k-NN",
-            // "ml-commons",
-            // "notifications",
-            // "observability",
-            // "performance-analyzer",
-            // "performance-analyzer-rca",
-            // "security",
-            // "sql",
-        ];
-        let lines = [];
-        lines.push(`## Release Readiness
-Repo | Triage | ${versions.join(" | ")}
------|-----|-----|-----|-------`);
-        repositories.forEach(repo => {
-            let line = `${repo}`;
-            line = `${line} | ${makeUntriagedBadge(repo)}`;
-            versions.forEach(ver => {
-                line = `${line} | ${makeOpenIssueBadge(repo, ver)} ${makeClosedIssueBadge(repo, ver)}`;
-            });
-            lines.push(line);
-        });
-        const result = lines.join("\r\n");
+        else {
+            result = multiRepo(versions);
+        }
         console.log(result);
         return result;
     });
@@ -103,6 +66,73 @@ Repo | Triage | ${versions.join(" | ")}
 exports.run = run;
 run()
     .catch(error => core.setFailed("Workflow failed! " + error.message));
+function multiRepo(versions) {
+    const repositories = [
+        "OpenSearch",
+        "OpenSearch-Dashboards",
+        "alerting",
+        "anomaly-detection",
+        "asynchronous-search",
+        "common-utils",
+        "cross-cluster-replication",
+        "dashboards-reports",
+        "geospatial",
+        "index-management",
+        "job-scheduler",
+        "k-NN",
+        "ml-commons",
+        "notifications",
+        "observability",
+        "performance-analyzer",
+        "performance-analyzer-rca",
+        "security",
+        "sql",
+    ];
+    let lines = [];
+    lines.push("## Release Readiness");
+    const headingLine = `Repo | Triage | ${versions.join(" | ")}`;
+    lines.push(headingLine);
+    lines.push(headingLine.split("|").map(s => "---").join("|"));
+    repositories.forEach(repo => {
+        let line = `${repo}`;
+        line = `${line} | ${makeUntriagedBadge(repo)}`;
+        versions.forEach(ver => {
+            line = `${line} | ${makeNextReleaseIssueCount(repo, ver)} ${makeNextReleaseClosedIssueCount(repo, ver)}`;
+        });
+        lines.push(line);
+    });
+    return lines.join("\r\n");
+}
+exports.multiRepo = multiRepo;
+function singleRepo(repo, versions) {
+    let tableKeys = [];
+    let tableValues = [];
+    tableKeys.push("Untriaged");
+    tableValues.push(makeUntriagedBadge(repo));
+    tableKeys.push("Security Issues");
+    tableValues.push(makeSecurityIssues(repo));
+    tableKeys.push(`Open Issues`);
+    tableValues.push(makeOpenIssues(repo));
+    tableKeys.push(`Open Pull Requests`);
+    tableValues.push(makeOpenPullRequests(repo));
+    tableKeys.push("Code Coverage");
+    tableValues.push(makeCodeCoverage(repo));
+    versions.forEach(version => {
+        tableKeys.push(`Upcoming ${version} Release Issues`);
+        tableValues.push(makeNextReleaseIssueCount(repo, version));
+    });
+    // is this tabular output useful?  Badges seemly should stand on their own
+    // const tableHeaderRow = tableKeys.join("|");
+    // const tableDividerRow = tableKeys.map(s => "---").join("|");
+    // const tableValuesRow = tableValues.join("|");
+    // return tableHeaderRow + "\r\n" + tableDividerRow + "\r\n" + tableValuesRow;
+    const lines = [];
+    for (let i = 0; i < tableKeys.length; i++) {
+        lines.push(`${tableValues[i]}`);
+    }
+    return lines.join(" ");
+}
+exports.singleRepo = singleRepo;
 //# sourceMappingURL=main.js.map
 
 /***/ }),
