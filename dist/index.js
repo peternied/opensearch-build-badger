@@ -18,41 +18,75 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
 const core = __nccwpck_require__(186);
+const repoRoot = 'https://github.com/opensearch-project/';
+const makeShieldPrefix = (type) => `https://img.shields.io/github/${type}/opensearch-project`;
+const untriagedPrefix = `![](${makeShieldPrefix("issues")}`;
+const makeUntriagedBadge = (repo) => `[${untriagedPrefix}/${repo}/untriaged)](${repoRoot}${repo}/issues?q=is%3Aissue+is%3Aopen+label%3Auntriaged)`;
+const openIssuePrefix = `![](${makeShieldPrefix("issues")}`;
+const closedIssuePrefix = `![](${makeShieldPrefix("issues-closed")}`;
+const makeOpenIssueBadge = (repo, twoDigitVer) => `[${openIssuePrefix}/${repo}/v${twoDigitVer}.0)](${repoRoot}${repo}/issues?q=is%3Aissue+is%3Aopen+label%3Av${twoDigitVer}.0)`;
+const makeClosedIssueBadge = (repo, twoDigitVer) => `[${closedIssuePrefix}/${repo}/v${twoDigitVer}.0)](${repoRoot}${repo}/issues?q=is%3Aissue+is%3Aclosed+label%3Av${twoDigitVer}.0)`;
+const makeInactiveIssuesOverXDays = (repo, days) => `INACTIVE_ISSUES`;
+const makeInactivePullRequestsOverXDays = (repo, days) => `INACTIVE_PRS`;
+const makeSecurityIssues = (repo) => `SECURITY_ISSUES`;
+const makeCodeCoverage = (repo) => `![https://img.shields.io/codecov/c/gh/opensearch-project/${repo}](https://app.codecov.io/gh/opensearch-project/${repo})`;
+const makeNextReleaseIssueCount = (repo, twoDigitVer) => `NEXT_RELEASE_ISSUES`;
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         const versionParam = core.getInput("versions", { required: true });
+        const singleRepository = "security"; //core.getInput("repository", {required: false});
         const versions = versionParam.split(",").map(str => str.trim());
+        if (!!singleRepository) {
+            let tableKeys = [];
+            let tableValues = [];
+            tableKeys.push("Untriaged");
+            tableValues.push(makeUntriagedBadge(singleRepository));
+            const inactiveDays = 14;
+            tableKeys.push(`Inactive Issues (${inactiveDays} days)`);
+            tableValues.push(makeInactiveIssuesOverXDays(singleRepository, inactiveDays));
+            tableKeys.push(`Inactive Pull Requests (${inactiveDays} days)`);
+            tableValues.push(makeInactivePullRequestsOverXDays(singleRepository, inactiveDays));
+            tableKeys.push("Security Issues");
+            tableValues.push(makeSecurityIssues(singleRepository));
+            tableKeys.push("Code Coverage");
+            tableValues.push(makeCodeCoverage(singleRepository));
+            const nextMajor = "3.0";
+            tableKeys.push(`Upcoming ${nextMajor} Release Issues`);
+            tableValues.push(makeSecurityIssues(makeNextReleaseIssueCount(singleRepository, nextMajor)));
+            const nextMinor = "2.4";
+            tableKeys.push(`Upcoming ${nextMinor} Release Issues`);
+            tableValues.push(makeSecurityIssues(makeNextReleaseIssueCount(singleRepository, nextMinor)));
+            const tableHeaderRow = tableKeys.join("|");
+            const tableDividerRow = tableKeys.map(s => "---").join("|");
+            const tableValuesRow = tableValues.join("|");
+            console.log(tableHeaderRow + "\r\n" + tableDividerRow + "\r\n" + tableValuesRow);
+            return;
+        }
         const repositories = [
             "OpenSearch",
-            "OpenSearch-Dashboards",
-            "alerting",
-            "anomaly-detection",
-            "asynchronous-search",
-            "common-utils",
-            "cross-cluster-replication",
-            "dashboards-reports",
-            "geospatial",
-            "index-management",
-            "job-scheduler",
-            "k-NN",
-            "ml-commons",
-            "notifications",
-            "observability",
-            "performance-analyzer",
-            "performance-analyzer-rca",
-            "security",
-            "sql",
+            // "OpenSearch-Dashboards",
+            // "alerting",
+            // "anomaly-detection",
+            // "asynchronous-search",
+            // "common-utils",
+            // "cross-cluster-replication",
+            // "dashboards-reports",
+            // "geospatial",
+            // "index-management",
+            // "job-scheduler",
+            // "k-NN",
+            // "ml-commons",
+            // "notifications",
+            // "observability",
+            // "performance-analyzer",
+            // "performance-analyzer-rca",
+            // "security",
+            // "sql",
         ];
-        const untriagedPrefix = "![](https://img.shields.io/github/issues/opensearch-project";
-        const makeUntriagedBadge = (repo) => `[${untriagedPrefix}/${repo}/untriaged)](https://github.com/opensearch-project/${repo}/issues?q=is%3Aissue+is%3Aopen+label%3Auntriaged)`;
-        const openIssuePrefix = "![](https://img.shields.io/github/issues/opensearch-project";
-        const closedIssuePrefix = "![](https://img.shields.io/github/issues-closed/opensearch-project";
-        const makeOpenIssueBadge = (repo, twoDigitVer) => `[${openIssuePrefix}/${repo}/v${twoDigitVer}.0)](https://github.com/opensearch-project/${repo}/issues?q=is%3Aissue+is%3Aopen+label%3Av${twoDigitVer}.0)`;
-        const makeClosedIssueBadge = (repo, twoDigitVer) => `[${closedIssuePrefix}/${repo}/v${twoDigitVer}.0)](https://github.com/opensearch-project/${repo}/issues?q=is%3Aissue+is%3Aclosed+label%3Av${twoDigitVer}.0)`;
         let lines = [];
         lines.push(`## Release Readiness
-    Repo | Triage | ${versions.join(" | ")}
-    -----|-----|-----|-----|-------`);
+Repo | Triage | ${versions.join(" | ")}
+-----|-----|-----|-----|-------`);
         repositories.forEach(repo => {
             let line = `${repo}`;
             line = `${line} | ${makeUntriagedBadge(repo)}`;
