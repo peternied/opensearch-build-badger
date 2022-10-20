@@ -1,1 +1,1 @@
-export {run} from "./main"
+export { run } from './main'

@@ -3,13 +3,16 @@ on:
   workflow_dispatch
 
 jobs:
-  create:
+  create-multiple:
     runs-on: ubuntu-latest
     steps:
     - uses: peternied/opensearch-build-badger@main
       with:
         versions: "1.3.7, 2.3, 3.0"
+  create-single:
+    runs-on: ubuntu-latest
+    steps:
     - uses: peternied/opensearch-build-badger@main
       with:
-        versions: "3.0, 2.4"
-        repository: "security"
+        versions: "2.4, 3.0"
+        repository: "opensearch"
